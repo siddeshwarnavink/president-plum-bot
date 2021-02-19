@@ -7,6 +7,10 @@
   "author": "Siddeshwar",
   "license": "MIT",
   "private": true,
+  "scripts": {
+  	"start": "node bot.js",
+	"dev": "nodemon bot.js"
+  },
   "dependencies": {
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0"
