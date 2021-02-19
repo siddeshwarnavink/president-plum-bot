@@ -1,0 +1,10 @@
+{
+  "name": "president-plum-bot",
+  "version": "1.0.0",
+  "description": "A moderation discord bot for fun",
+  "main": "bot.js",
+  "repository": "https://github.com/siddeshwarnavink/president-plum-bot",
+  "author": "Siddeshwar",
+  "license": "MIT",
+  "private": true
+}
