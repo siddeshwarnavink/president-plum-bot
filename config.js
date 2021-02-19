@@ -1,2 +1,0 @@
-exports.MODROLE_ID = '811384095656902657';
-exports.BOT_PREFIX = '$';

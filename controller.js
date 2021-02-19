@@ -1,7 +1,5 @@
 const fetch = require('node-fetch');
 
-const { BOT_PREFIX } = require('./config');
-
 const roastSomeone = async (msg, client) => {
 	const user = msg.mentions.users.first();
  	
@@ -24,7 +22,7 @@ const roastSomeone = async (msg, client) => {
 };
 
 module.exports = (msg, client) => {
-	const actualCommand = msg.content.replace(BOT_PREFIX, '').trim();
+	const actualCommand = msg.content.replace(process.env.BOT_PREFIX, '').trim();
 
 	// Roast
 	if(actualCommand.startsWith('roast')) {
