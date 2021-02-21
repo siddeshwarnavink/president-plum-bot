@@ -35,12 +35,13 @@ client.on('guildMemberAdd', async member => {
 	logChannel.send(`${member} has just joined the server`);
 
 	// Check for existing record
-	const userExistResp = await fetch(`https://president-plum-bot-dev.firebaseio.com/user/${member.user.id}.json`);
+	const userExistResp = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${member.user.id}.json`);
+	const userExitData = await userExistResp.json();
 
-	if(!userExistResp.ok) {
+	if(userExitData === null) {
 		// Create a record
-		await fetch(`https://president-plum-bot-dev.firebaseio.com/user/${member.user.id}.json`, {
-			method: 'POST',
+		await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${member.user.id}.json`, {
+			method: 'PUT',
 			headers: {
       				'Content-Type': 'application/json'
 			},
