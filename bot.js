@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const dotenv = require('dotenv');
+const fetch = require('node-fetch');
 
 const handleCommands = require('./controller');
 
@@ -16,15 +17,39 @@ client.on('message', msg => {
 	}
 });
 
-client.on('guildMemberAdd', member => {
-	const channel = member.guild.channels.cache.find(ch => ch.id === process.env.WELCOME_CHANNEL_ID);
-  	
-	if (!channel) return;	
+client.on('guildMemberAdd', async member => {
+	const publicChannel = member.guild.channels.cache.find(ch => ch.id === process.env.WELCOME_CHANNEL_ID);
+  	const logChannel = member.guild.channels.cache.find(ch => ch.id === process.env.LOG_CHANNEL_ID);
+ 
 
-	console.log(member);
+	if (!publicChannel) return;	
+	
+	const embed = new Discord.MessageEmbed()
+			.setTitle(`Welcome ${member.displayName}!`)
+			.setColor('YELLOW')
+			.setDescription('Hope you stay here')
+			.setThumbnail(member.user.displayAvatarURL());
 
-	channel.send(`Welcome to the server, ${member}`);
-	channel.send('Hope you have a great time here!');
+	publicChannel.send(embed);
+	
+	logChannel.send(`${member} has just joined the server`);
+
+	// Check for existing record
+	const userExistResp = await fetch(`https://president-plum-bot-dev.firebaseio.com/user/${member.user.id}.json`);
+
+	if(!userExistResp.ok) {
+		// Create a record
+		await fetch(`https://president-plum-bot-dev.firebaseio.com/user/${member.user.id}.json`, {
+			method: 'POST',
+			headers: {
+      				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				level: 1,
+				pingCount: 0,
+			})
+		});
+	}
 
 	member.roles.set([process.env.NEWBIE_ROLE_ID]);
 });
