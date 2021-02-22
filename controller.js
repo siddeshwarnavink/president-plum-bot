@@ -25,6 +25,15 @@ const roastSomeone = async (msg, client) => {
 };
 
 const dailyGrind = async (msg, client) => {
+    // Check if user already being assigned
+    const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`);
+    const currentUserData = await currentUser.json();
+
+    if(currentUserData !== null) {
+        msg.channel.send('You\'re aready in a task, go do that!');
+        return;
+    }
+
     // Get the list of daily grinding
     const dailyGrindResp = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/daily-grinding.json`);
     const dailyGrinding = await dailyGrindResp.json()
@@ -55,10 +64,10 @@ const dailyGrind = async (msg, client) => {
 
     setTimeout(async () => {
         // Check if the user has completed the task
-        const updatedTask = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`);
-        const updatedTaskData = await updatedTask.json();
+        const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`);
+        const currentUserData = await currentUser.json();
 
-        if (!updatedTaskData.currentTask.completed) {
+        if (!currentUserData.currentTask.completed) {
             const failedEmbed = new Discord.MessageEmbed()
                 .setTitle(`Daily commission failed!`)
                 .setColor('RED')
