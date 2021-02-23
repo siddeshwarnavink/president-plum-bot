@@ -29,7 +29,7 @@ const dailyGrind = async (msg, client) => {
     const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`);
     const currentUserData = await currentUser.json();
 
-    if(currentUserData !== null) {
+    if (currentUserData !== null) {
         msg.channel.send('You\'re aready in a task, go do that!');
         return;
     }
@@ -54,13 +54,44 @@ const dailyGrind = async (msg, client) => {
         })
     });
 
+    // Listen for task completion
+    (async () => {
+        while (true) {
+            const currentTaskResp = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`);
+            const currentTaskData = await currentTaskResp.json();
+
+            if (currentTaskData === null) break;
+
+            if (currentTaskData.completed) {
+                const successEmbed = new Discord.MessageEmbed()
+                    .setTitle(`Daily commission completed!`)
+                    .setColor('GREEN')
+                    .setDescription(`Keep rocking, ${msg.author.username}! +120xp`);
+
+                msg.channel.send(successEmbed);
+
+                // null the currentTask
+                await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentTask: null,
+                        lastGrindedAt: new Date(Date.now()).toISOString()
+                    })
+                });
+
+                break;
+            }
+        }
+    })();
+
     const embed = new Discord.MessageEmbed()
         .setTitle(`${msg.author.username}, ${randomTaks.title}`)
         .setColor('BLUE')
         .setDescription(`${randomTaks.description}`)
         .setFooter(`Time limit: ${randomTaks.duration} seconds`);
-
-    const taskMessage = await msg.channel.send(embed);
 
     setTimeout(async () => {
         // Check if the user has completed the task
@@ -73,27 +104,37 @@ const dailyGrind = async (msg, client) => {
                 .setColor('RED')
                 .setDescription(`${msg.author.username}, You suck!`);
 
-            taskMessage.edit(failedEmbed);
-        } else {
-            const successEmbed = new Discord.MessageEmbed()
-                .setTitle(`Daily commission completed!`)
-                .setColor('GREEN')
-                .setDescription(`Keep rocking, ${msg.author.username}! +120xp`);
-
-            taskMessage.edit(successEmbed);
+            msg.channel.send(failedEmbed);
         }
 
-        await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                currentTask: null,
-                lastGrindedAt: new Date(Date.now()).toISOString()
-            })
-        });
+        if (currentUserData.currentTask !== null) {
+            await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    currentTask: null,
+                    lastGrindedAt: new Date(Date.now()).toISOString()
+                })
+            });
+        }
     }, randomTaks.duration * 1000);
+
+    msg.channel.send(embed);
+}
+
+const bulkDeleteMessages = async (msg, client) => {
+    // Check if the user can do this action
+    const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`);
+    const currentUserData = await currentUser.json();
+
+    if (msg.member.roles.cache.has(process.env.MOD_ROLE_ID) || (currentUserData.currentTask && currentUserData.currentTask.data.id === 1)) {
+        await msg.channel.bulkDelete(100);
+        msg.channel.send(`:broom: \`\`${msg.author.username}\`\` cleaned messages.`)
+    } else {
+        msg.channel.send('What are you thinking you\'re doing? You\'re now worthy to use this command.');
+    }
 }
 
 module.exports = (msg, client) => {
@@ -107,5 +148,10 @@ module.exports = (msg, client) => {
     // Daily grinding
     else if (actualCommand.startsWith('daily')) {
         dailyGrind(msg, client);
+    }
+
+    // Clear messages
+    else if (actualCommand.startsWith('clear')) {
+        bulkDeleteMessages(msg, client);
     }
 };
