@@ -132,6 +132,24 @@ const bulkDeleteMessages = async (msg, client) => {
     if (msg.member.roles.cache.has(process.env.MOD_ROLE_ID) || (currentUserData.currentTask && currentUserData.currentTask.data.id === 1)) {
         await msg.channel.bulkDelete(100);
         msg.channel.send(`:broom: \`\`${msg.author.username}\`\` cleaned messages.`)
+
+        // if task, listen for completion
+        if (currentUserData.currentTask && currentUserData.currentTask.data.id === 1) {
+            const messages = await msg.channel.messages.fetch();
+            const msgCount = messages.array().length;
+
+            if (msgCount <= 1) {
+                await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        completed: true
+                    })
+                });
+            }
+        }
     } else {
         msg.channel.send('What are you thinking you\'re doing? You\'re now worthy to use this command.');
     }
