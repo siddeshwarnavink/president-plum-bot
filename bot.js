@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const fetch = require('node-fetch');
 
 const handleCommands = require('./controller');
+const dailyGrindingCtrl = require('./daily-grinding-ctrl');
 
 const client = new Discord.Client;
 dotenv.config();
@@ -15,6 +16,8 @@ client.on('message', msg => {
     if (msg.content.startsWith(process.env.BOT_PREFIX)) {
         handleCommands(msg, client);
     }
+
+    dailyGrindingCtrl(msg, client);
 });
 
 client.on('guildMemberAdd', async member => {
