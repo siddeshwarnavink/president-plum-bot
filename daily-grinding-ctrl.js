@@ -15,7 +15,7 @@ const cringeCommision = async (msg, client) => {
 
         if (userCringMessage.array().length >= 10) {
             await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },

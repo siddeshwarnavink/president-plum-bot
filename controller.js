@@ -63,10 +63,13 @@ const dailyGrind = async (msg, client) => {
             if (currentTaskData === null) break;
 
             if (currentTaskData.completed) {
+                const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`);
+                const currentUserData = await currentUser.json();
+
                 const successEmbed = new Discord.MessageEmbed()
                     .setTitle(`Daily commission completed!`)
                     .setColor('GREEN')
-                    .setDescription(`Keep rocking, ${msg.author.username}! +120xp`);
+                    .setDescription(`Keep rocking, ${msg.author.username}! +${currentUserData.xpPitty}xp`);
 
                 msg.channel.send(successEmbed);
 
@@ -81,7 +84,16 @@ const dailyGrind = async (msg, client) => {
                         lastGrindedAt: new Date(Date.now()).toISOString()
                     })
                 });
-
+                // Give the user XP
+                await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        xp: currentUserData.xp + currentUserData.xpPitty
+                    })
+                });
                 break;
             }
         }

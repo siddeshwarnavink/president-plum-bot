@@ -49,7 +49,8 @@ client.on('guildMemberAdd', async member => {
             },
             body: JSON.stringify({
                 level: 1,
-                pingCount: 0,
+                xp: 0,
+                xpPitty: 2,
             })
         });
     }
