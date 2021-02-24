@@ -25,13 +25,34 @@ const roastSomeone = async (msg, client) => {
 };
 
 const dailyGrind = async (msg, client) => {
-    // Check if user already being assigned
-    const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`);
+    const currentUser = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`);
     const currentUserData = await currentUser.json();
 
-    if (currentUserData !== null) {
+    // Check if user already being assigned
+    const currentTaskResp = await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}/currentTask.json`);
+    const currentTask = await currentTaskResp.json();
+
+    if (currentTask !== null) {
         msg.channel.send('You\'re aready in a task, go do that!');
         return;
+    }
+
+    const COOLDOWN = 300000; // 5 minutes
+
+    if (currentUserData.lastGrindedAt) {
+        const lastGrinded = new Date(currentUserData.lastGrindedAt);
+        const nowDate = new Date(Date.now());
+
+
+        if (lastGrinded < nowDate || lastGrinded - nowDate < COOLDOWN) {
+            const remainingSeconds = (COOLDOWN / 1000) - lastGrinded.getSeconds() - nowDate.getSeconds()
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds - minutes * 60;
+
+
+            msg.channel.send(`Just chill, alright. Come after **${minutes}m ${seconds}s**`);
+            return;
+        }
     }
 
     // Get the list of daily grinding
@@ -81,16 +102,7 @@ const dailyGrind = async (msg, client) => {
                     },
                     body: JSON.stringify({
                         currentTask: null,
-                        lastGrindedAt: new Date(Date.now()).toISOString()
-                    })
-                });
-                // Give the user XP
-                await fetch(`https://${process.env.FB_PROJECT_ID}.firebaseio.com/users/${msg.author.id}.json`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                        lastGrindedAt: new Date(Date.now()).toISOString(),
                         xp: currentUserData.xp + currentUserData.xpPitty
                     })
                 });
@@ -176,12 +188,12 @@ module.exports = (msg, client) => {
     }
 
     // Daily grinding
-    else if (actualCommand.startsWith('daily')) {
+    else if (actualCommand.startsWith('work')) {
         dailyGrind(msg, client);
     }
 
     // Clear messages
-    else if (actualCommand.startsWith('clear')) {
+    else if (actualCommand.startsWith('clean')) {
         bulkDeleteMessages(msg, client);
     }
 };
