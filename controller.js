@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
 
-const { getRandomInteger } = require('./utils');
+const { getRandomInteger, millisecondsToString } = require('./utils');
 
 const roastSomeone = async (msg, client) => {
     const user = msg.mentions.users.first();
@@ -10,7 +10,6 @@ const roastSomeone = async (msg, client) => {
         msg.reply('Mention someone idiot!');
         return;
     }
-
 
     try {
         const response = await fetch(`https://insult.mattbas.org/api/insult.txt?template=You+are+as+%3Cadjective%3E&who=${user.username}`);
@@ -41,16 +40,11 @@ const dailyGrind = async (msg, client) => {
 
     if (currentUserData.lastGrindedAt) {
         const lastGrinded = new Date(currentUserData.lastGrindedAt);
-        const nowDate = new Date(Date.now());
 
-
-        if (lastGrinded < nowDate || lastGrinded - nowDate < COOLDOWN) {
-            const remainingSeconds = (COOLDOWN / 1000) - lastGrinded.getSeconds() - nowDate.getSeconds()
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds - minutes * 60;
-
-
-            msg.channel.send(`Just chill, alright. Come after **${minutes}m ${seconds}s**`);
+        if (COOLDOWN - (Date.now() - lastGrinded) > 0) {
+            const differenceTime = Math.abs(new Date().getTime() - lastGrinded.getTime());
+            
+            msg.channel.send(`Just chill, alright. Come after **${millisecondsToString(differenceTime, COOLDOWN)}**`);
             return;
         }
     }
@@ -102,7 +96,7 @@ const dailyGrind = async (msg, client) => {
                     },
                     body: JSON.stringify({
                         currentTask: null,
-                        lastGrindedAt: new Date(Date.now()).toISOString(),
+                        lastGrindedAt: new Date().toISOString(),
                         xp: currentUserData.xp + currentUserData.xpPitty
                     })
                 });
